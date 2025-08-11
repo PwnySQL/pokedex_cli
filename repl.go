@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"slices"
 	"strings"
 )
 
@@ -25,6 +24,6 @@ func replLoop() {
 }
 
 func cleanInput(text string) []string {
-	splitStrings := slices.DeleteFunc(strings.Split(strings.TrimSpace(strings.ToLower(text)), " "), func (s string) bool { return s == "" })
-	return splitStrings
+	words := strings.Fields(strings.ToLower(text))
+	return words
 }
