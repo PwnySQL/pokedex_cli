@@ -101,18 +101,22 @@ func commandHelp(cfg *config) error {
 	return nil
 }
 
-func commandMap(cfg *config) error {
-	if cfg.Next == "" {
-		cfg.Next = "https://pokeapi.co/api/v2/location-area/"
-	}
-	req, err := http.NewRequest("GET", cfg.Next, nil)
+func doPokeapiRequest(url string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return fmt.Errorf("Error while setting up GET request in map: %v", err)
+		return nil, fmt.Errorf("Error while setting up GET request: %v", err)
 	}
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
-	res, err := client.Do(req)
+	return client.Do(req)
+}
+
+func commandMap(cfg *config) error {
+	if cfg.Next == "" {
+		cfg.Next = "https://pokeapi.co/api/v2/location-area/"
+	}
+	res, err := doPokeapiRequest(cfg.Next)
 	if err != nil {
 		return fmt.Errorf("Error while doing GET request in map: %v", err)
 	}
