@@ -112,6 +112,20 @@ func doPokeapiRequest(url string) (*http.Response, error) {
 	return client.Do(req)
 }
 
+func decodeLocationAreaJSON(res *http.Response) (string, string, []Location, error) {
+	var answer struct {
+		Count    int         `json:count`
+		Next     string      `json:next`
+		Previous string      `json:previous`
+		Results  []Location  `json:results`
+	}
+	decoder := json.NewDecoder(res.Body)
+	if err := decoder.Decode(&answer); err != nil {
+		return answer.Next, answer.Previous, answer.Results, fmt.Errorf("Error while decoding location area json: %v", err)
+	}
+	return answer.Next, answer.Previous, answer.Results, nil
+}
+
 func commandMap(cfg *config) error {
 	if cfg.Next == "" {
 		cfg.Next = "https://pokeapi.co/api/v2/location-area/"
@@ -121,22 +135,15 @@ func commandMap(cfg *config) error {
 		return fmt.Errorf("Error while doing GET request in map: %v", err)
 	}
 	defer res.Body.Close()
-
-	var answer struct {
-		Count    int         `json:count`
-		Next     string      `json:next`
-		Previous string      `json:previous`
-		Results  []Location  `json:results`
+	next, prev, locations, err := decodeLocationAreaJSON(res)
+	if err != nil {
+		return err
 	}
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&answer); err != nil {
-		return fmt.Errorf("Error while decoding json in map: %v", err)
-	}
-	for _, loc := range answer.Results {
+	cfg.Next = next
+	cfg.Prev = prev
+	for _, loc := range locations {
 		fmt.Println(loc.Name)
 	}
-	cfg.Next = answer.Next
-	cfg.Prev = answer.Previous
 
 	return nil
 }
