@@ -32,6 +32,11 @@ func getCommandRegistry() map[string] cliCommand {
 			description: "Display the help message",
 			callback: commandHelp,
 		},
+		"map": {
+			name: "map",
+			description: "Show current locations and go to next area",
+			callback: commandMap,
+		},
 	}
 }
 
@@ -82,5 +87,10 @@ func commandHelp(cfg config) error {
 	for _, cliCmd := range commandRegistry {
 		fmt.Printf("%s: %s\n", cliCmd.name, cliCmd.description)
 	}
+	return nil
+}
+
+func commandMap(cfg config) error {
+	fmt.Println("Nothing to see yet")
 	return nil
 }
