@@ -48,6 +48,11 @@ func getCommandRegistry() map[string] cliCommand {
 			description: "Show current locations and go to next area",
 			callback: commandMap,
 		},
+			"mapb": {
+			name: "mapb",
+			description: "Show current locations and go to previous area",
+			callback: commandMapb,
+		},
 	}
 }
 
@@ -142,6 +147,18 @@ func commandMap(cfg *config) error {
 	if err != nil {
 		return err
 	}
+	cfg.Next = next
+	cfg.Prev = prev
+
+	return nil
+}
+
+func commandMapb(cfg *config) error {
+	if cfg.Prev == "" {
+		fmt.Println("you're on the first page")
+		return nil
+	}
+	next, prev, err := printLocationArea(cfg.Prev)
 	if err != nil {
 		return err
 	}
