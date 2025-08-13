@@ -9,10 +9,14 @@ import (
 )
 
 
+type config struct {
+}
+
+
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(config) error
 }
 
 
@@ -49,7 +53,8 @@ func replLoop() {
 			fmt.Printf("Unknown command: %s\n", words[0])
 			continue
 		}
-		err := cliCmd.callback()
+		var cfg config
+		err := cliCmd.callback(cfg)
 		if err != nil {
 			fmt.Printf("Error while executing '%s': %s: \n", cliCmd.name, err.Error())
 			continue
@@ -62,13 +67,13 @@ func cleanInput(text string) []string {
 	return words
 }
 
-func commandExit() error {
+func commandExit(cfg config) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return errors.New("os.Exit(0) did not work")
 }
 
-func commandHelp() error {
+func commandHelp(cfg config) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("Pokedex is an interactive program to query information about Pokemon.")
 	fmt.Println()
