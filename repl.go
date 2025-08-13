@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -79,53 +78,4 @@ func replLoop(cfg *config) {
 func cleanInput(text string) []string {
 	words := strings.Fields(strings.ToLower(text))
 	return words
-}
-
-func commandExit(cfg *config) error {
-	fmt.Println("Closing the Pokedex... Goodbye!")
-	os.Exit(0)
-	return errors.New("os.Exit(0) did not work")
-}
-
-func commandHelp(cfg *config) error {
-	fmt.Println("Welcome to the Pokedex!")
-	fmt.Println("Pokedex is an interactive program to query information about Pokemon.")
-	fmt.Println()
-	fmt.Println("Available commands:")
-	commandRegistry := getCommandRegistry()
-	for _, cliCmd := range commandRegistry {
-		fmt.Printf("%s: %s\n", cliCmd.name, cliCmd.description)
-	}
-	return nil
-}
-
-func commandMap(cfg *config) error {
-	locationResp, err := cfg.pokeapiClient.GetLocationList(cfg.nextLocationsUrl)
-	if err != nil {
-		return err
-	}
-	for _, loc := range locationResp.Results {
-		fmt.Println(loc.Name)
-	}
-	cfg.nextLocationsUrl = locationResp.Next
-	cfg.prevLocationsUrl = locationResp.Previous
-
-	return nil
-}
-
-func commandMapb(cfg *config) error {
-	if cfg.prevLocationsUrl == nil {
-		return errors.New("you're on the first page")
-	}
-	locationResp, err := cfg.pokeapiClient.GetLocationList(cfg.prevLocationsUrl)
-	if err != nil {
-		return err
-	}
-	for _, loc := range locationResp.Results {
-		fmt.Println(loc.Name)
-	}
-	cfg.nextLocationsUrl = locationResp.Next
-	cfg.prevLocationsUrl = locationResp.Previous
-
-	return nil
 }
