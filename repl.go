@@ -4,19 +4,30 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"encoding/json"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 
 type config struct {
+	Next string
+	Prev string
 }
 
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(config) error
+	callback    func(*config) error
+}
+
+
+type Location struct {
+	Name string
+	Url  string
 }
 
 
@@ -43,6 +54,7 @@ func getCommandRegistry() map[string] cliCommand {
 
 func replLoop() {
 	scanner := bufio.NewScanner(os.Stdin)
+	var cfg config
 	for ;; {
 		fmt.Print("Pokedex > ")
 		if hasToken := scanner.Scan(); !hasToken {
@@ -58,8 +70,7 @@ func replLoop() {
 			fmt.Printf("Unknown command: %s\n", words[0])
 			continue
 		}
-		var cfg config
-		err := cliCmd.callback(cfg)
+		err := cliCmd.callback(&cfg)
 		if err != nil {
 			fmt.Printf("Error while executing '%s': %s: \n", cliCmd.name, err.Error())
 			continue
@@ -72,13 +83,13 @@ func cleanInput(text string) []string {
 	return words
 }
 
-func commandExit(cfg config) error {
+func commandExit(cfg *config) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return errors.New("os.Exit(0) did not work")
 }
 
-func commandHelp(cfg config) error {
+func commandHelp(cfg *config) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("Pokedex is an interactive program to query information about Pokemon.")
 	fmt.Println()
@@ -90,7 +101,38 @@ func commandHelp(cfg config) error {
 	return nil
 }
 
-func commandMap(cfg config) error {
-	fmt.Println("Nothing to see yet")
+func commandMap(cfg *config) error {
+	if cfg.Next == "" {
+		cfg.Next = "https://pokeapi.co/api/v2/location-area/"
+	}
+	req, err := http.NewRequest("GET", cfg.Next, nil)
+	if err != nil {
+		return fmt.Errorf("Error while setting up GET request in map: %v", err)
+	}
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("Error while doing GET request in map: %v", err)
+	}
+	defer res.Body.Close()
+
+	var answer struct {
+		Count    int         `json:count`
+		Next     string      `json:next`
+		Previous string      `json:previous`
+		Results  []Location  `json:results`
+	}
+	decoder := json.NewDecoder(res.Body)
+	if err := decoder.Decode(&answer); err != nil {
+		return fmt.Errorf("Error while decoding json in map: %v", err)
+	}
+	for _, loc := range answer.Results {
+		fmt.Println(loc.Name)
+	}
+	cfg.Next = answer.Next
+	cfg.Prev = answer.Previous
+
 	return nil
 }
