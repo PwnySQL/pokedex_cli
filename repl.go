@@ -4,17 +4,17 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"encoding/json"
-	"net/http"
 	"os"
 	"strings"
-	"time"
+
+	"github.com/PwnySQL/pokedex_cli/internal/pokeapi"
 )
 
 
 type config struct {
-	Next string
-	Prev string
+	pokeapiClient    pokeapi.Client
+	nextLocationsUrl *string
+	prevLocationsUrl *string
 }
 
 
@@ -22,12 +22,6 @@ type cliCommand struct {
 	name        string
 	description string
 	callback    func(*config) error
-}
-
-
-type Location struct {
-	Name string
-	Url  string
 }
 
 
@@ -57,9 +51,8 @@ func getCommandRegistry() map[string] cliCommand {
 }
 
 
-func replLoop() {
+func replLoop(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
-	var cfg config
 	for ;; {
 		fmt.Print("Pokedex > ")
 		if hasToken := scanner.Scan(); !hasToken {
@@ -75,7 +68,7 @@ func replLoop() {
 			fmt.Printf("Unknown command: %s\n", words[0])
 			continue
 		}
-		err := cliCmd.callback(&cfg)
+		err := cliCmd.callback(cfg)
 		if err != nil {
 			fmt.Printf("Error while executing '%s': %s: \n", cliCmd.name, err.Error())
 			continue
@@ -106,64 +99,33 @@ func commandHelp(cfg *config) error {
 	return nil
 }
 
-func doPokeapiRequest(url string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("Error while setting up GET request: %v", err)
-	}
-	client := &http.Client{
-		Timeout: 5 * time.Second,
-	}
-	return client.Do(req)
-}
-
-func printLocationArea(url string) (string, string, error) {
-	res, err := doPokeapiRequest(url)
-	if err != nil {
-		return "", "", fmt.Errorf("Error while doing GET request in map: %v", err)
-	}
-	defer res.Body.Close()
-	var answer struct {
-		Count    int         `json:count`
-		Next     string      `json:next`
-		Previous string      `json:previous`
-		Results  []Location  `json:results`
-	}
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&answer); err != nil {
-		return answer.Next, answer.Previous, fmt.Errorf("Error while decoding location area json: %v", err)
-	}
-	for _, loc := range answer.Results {
-		fmt.Println(loc.Name)
-	}
-	return answer.Next, answer.Previous, nil
-}
-
 func commandMap(cfg *config) error {
-	if cfg.Next == "" {
-		cfg.Next = "https://pokeapi.co/api/v2/location-area/"
-	}
-	next, prev, err := printLocationArea(cfg.Next)
+	locationResp, err := cfg.pokeapiClient.GetLocationList(cfg.nextLocationsUrl)
 	if err != nil {
 		return err
 	}
-	cfg.Next = next
-	cfg.Prev = prev
+	for _, loc := range locationResp.Results {
+		fmt.Println(loc.Name)
+	}
+	cfg.nextLocationsUrl = locationResp.Next
+	cfg.prevLocationsUrl = locationResp.Previous
 
 	return nil
 }
 
 func commandMapb(cfg *config) error {
-	if cfg.Prev == "" {
-		fmt.Println("you're on the first page")
-		return nil
+	if cfg.prevLocationsUrl == nil {
+		return errors.New("you're on the first page")
 	}
-	next, prev, err := printLocationArea(cfg.Prev)
+	locationResp, err := cfg.pokeapiClient.GetLocationList(cfg.prevLocationsUrl)
 	if err != nil {
 		return err
 	}
-	cfg.Next = next
-	cfg.Prev = prev
+	for _, loc := range locationResp.Results {
+		fmt.Println(loc.Name)
+	}
+	cfg.nextLocationsUrl = locationResp.Next
+	cfg.prevLocationsUrl = locationResp.Previous
 
 	return nil
 }
