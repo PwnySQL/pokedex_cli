@@ -112,7 +112,12 @@ func doPokeapiRequest(url string) (*http.Response, error) {
 	return client.Do(req)
 }
 
-func decodeLocationAreaJSON(res *http.Response) (string, string, []Location, error) {
+func printLocationArea(url string) (string, string, error) {
+	res, err := doPokeapiRequest(url)
+	if err != nil {
+		return "", "", fmt.Errorf("Error while doing GET request in map: %v", err)
+	}
+	defer res.Body.Close()
 	var answer struct {
 		Count    int         `json:count`
 		Next     string      `json:next`
@@ -121,29 +126,27 @@ func decodeLocationAreaJSON(res *http.Response) (string, string, []Location, err
 	}
 	decoder := json.NewDecoder(res.Body)
 	if err := decoder.Decode(&answer); err != nil {
-		return answer.Next, answer.Previous, answer.Results, fmt.Errorf("Error while decoding location area json: %v", err)
+		return answer.Next, answer.Previous, fmt.Errorf("Error while decoding location area json: %v", err)
 	}
-	return answer.Next, answer.Previous, answer.Results, nil
+	for _, loc := range answer.Results {
+		fmt.Println(loc.Name)
+	}
+	return answer.Next, answer.Previous, nil
 }
 
 func commandMap(cfg *config) error {
 	if cfg.Next == "" {
 		cfg.Next = "https://pokeapi.co/api/v2/location-area/"
 	}
-	res, err := doPokeapiRequest(cfg.Next)
+	next, prev, err := printLocationArea(cfg.Next)
 	if err != nil {
-		return fmt.Errorf("Error while doing GET request in map: %v", err)
+		return err
 	}
-	defer res.Body.Close()
-	next, prev, locations, err := decodeLocationAreaJSON(res)
 	if err != nil {
 		return err
 	}
 	cfg.Next = next
 	cfg.Prev = prev
-	for _, loc := range locations {
-		fmt.Println(loc.Name)
-	}
 
 	return nil
 }
