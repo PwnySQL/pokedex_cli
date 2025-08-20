@@ -24,9 +24,26 @@ func (cache *Cache) Get(key string) ([]byte, bool) {
 	return val.val, isKeyInCache
 }
 
-func NewCache() Cache {
-	return Cache{
+func (cache *Cache) reapLoop(reapInterval time.Duration) {
+	cache.mutex.Lock()
+	defer cache.mutex.Unlock()
+	now := time.Now()
+	for k, v := range cache.cache {
+		if now.Sub(v.createdAt) > reapInterval {
+			delete(cache.cache, k)
+		}
+	}
+}
+
+func NewCache(reapInterval time.Duration) *Cache {
+	cache := &Cache{
 		cache: map[string]cacheEntry{},
 		mutex: sync.Mutex{},
 	}
+	go func(tickCh <-chan time.Time, cache *Cache, reapInterval time.Duration) {
+		for _ = range tickCh {
+			cache.reapLoop(reapInterval)
+		}
+	}(time.Tick(reapInterval), cache, reapInterval)
+	return cache
 }
