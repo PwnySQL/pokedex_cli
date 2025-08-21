@@ -2,6 +2,7 @@ package pokeapi
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 )
 
@@ -18,15 +19,22 @@ func (c *Client) GetLocationList(url *string) (RespLocation, error) {
 	if url != nil {
 		locationUrl = *url
 	}
-	res, err := c.doPokeapiRequest(&locationUrl)
-	if err != nil {
-		return RespLocation{}, err
-	}
-	defer res.Body.Close()
 	var decodedRes RespLocation
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&decodedRes); err != nil {
-		return RespLocation{}, err
+	cachedRes, isCached := c.cache.Get(locationUrl)
+	if !isCached {
+		res, err := c.doPokeapiRequest(&locationUrl)
+		if err != nil {
+			return decodedRes, err
+		}
+		defer res.Body.Close()
+		cachedRes, err = io.ReadAll(res.Body)
+		if err != nil {
+			return decodedRes, err
+		}
+		c.cache.Add(locationUrl, cachedRes)
+	}
+	if err := json.Unmarshal(cachedRes, &decodedRes); err != nil {
+		return decodedRes, err
 	}
 	return decodedRes, nil
 }
