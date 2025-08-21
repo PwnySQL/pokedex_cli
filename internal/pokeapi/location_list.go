@@ -5,13 +5,8 @@ import (
 	"net/http"
 )
 
-
-func (c *Client) doPokeapiRequest(pageUrl *string) (*http.Response, error) {
-	url := baseURL + "location-area"
-	if pageUrl != nil {
-		url = *pageUrl
-	}
-	req, err := http.NewRequest("GET", url, nil)
+func (c *Client) doPokeapiRequest(url *string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", *url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +14,11 @@ func (c *Client) doPokeapiRequest(pageUrl *string) (*http.Response, error) {
 }
 
 func (c *Client) GetLocationList(url *string) (RespLocation, error) {
-	res, err := c.doPokeapiRequest(url)
+	locationUrl := baseURL + "/" + "location-area"
+	if url != nil {
+		locationUrl = *url
+	}
+	res, err := c.doPokeapiRequest(&locationUrl)
 	if err != nil {
 		return RespLocation{}, err
 	}
@@ -31,4 +30,3 @@ func (c *Client) GetLocationList(url *string) (RespLocation, error) {
 	}
 	return decodedRes, nil
 }
-
