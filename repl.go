@@ -46,6 +46,11 @@ func getCommandRegistry() map[string] cliCommand {
 			description: "Show current locations and go to previous area",
 			callback: commandMapb,
 		},
+		"explore": {
+			name:        "explore",
+			description: "Show pokemons in the area",
+			callback:    commandExplore,
+		},
 	}
 }
 
