@@ -9,13 +9,11 @@ import (
 	"github.com/PwnySQL/pokedex_cli/internal/pokeapi"
 )
 
-
 type config struct {
 	pokeapiClient    pokeapi.Client
 	nextLocationsUrl *string
 	prevLocationsUrl *string
 }
-
 
 type cliCommand struct {
 	name        string
@@ -23,28 +21,27 @@ type cliCommand struct {
 	callback    func(*config) error
 }
 
-
-func getCommandRegistry() map[string] cliCommand {
-	return map[string]cliCommand {
+func getCommandRegistry() map[string]cliCommand {
+	return map[string]cliCommand{
 		"exit": {
-			name: "exit",
+			name:        "exit",
 			description: "Exit the Program",
-			callback: commandExit,
+			callback:    commandExit,
 		},
 		"help": {
-			name: "help",
+			name:        "help",
 			description: "Display the help message",
-			callback: commandHelp,
+			callback:    commandHelp,
 		},
 		"map": {
-			name: "map",
+			name:        "map",
 			description: "Show current locations and go to next area",
-			callback: commandMap,
+			callback:    commandMap,
 		},
-			"mapb": {
-			name: "mapb",
+		"mapb": {
+			name:        "mapb",
 			description: "Show current locations and go to previous area",
-			callback: commandMapb,
+			callback:    commandMapb,
 		},
 		"explore": {
 			name:        "explore",
@@ -54,13 +51,12 @@ func getCommandRegistry() map[string] cliCommand {
 	}
 }
 
-
 func replLoop(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
-	for ;; {
+	for {
 		fmt.Print("Pokedex > ")
 		if hasToken := scanner.Scan(); !hasToken {
-			break;
+			break
 		}
 		userInput := scanner.Text()
 		words := cleanInput(userInput)

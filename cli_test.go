@@ -32,7 +32,7 @@ func TestCleanInput(t *testing.T) {
 		}
 		for i, w := range actual {
 			expectedWord := c.expected[i]
-			if (w != expectedWord) {
+			if w != expectedWord {
 				t.Errorf("actual and expected are not the same word for index %d: expected '%s' vs '%s' actual", i, expectedWord, w)
 			}
 		}

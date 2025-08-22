@@ -2,6 +2,7 @@ package pokeapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -20,8 +21,10 @@ func (c *Client) GetLocationList(url *string) (RespLocation, error) {
 		locationUrl = *url
 	}
 	var decodedRes RespLocation
+	fmt.Printf("Request '%s' from cache\n", locationUrl)
 	cachedRes, isCached := c.cache.Get(locationUrl)
 	if !isCached {
+		fmt.Println("Populate cache")
 		res, err := c.doPokeapiRequest(&locationUrl)
 		if err != nil {
 			return decodedRes, err

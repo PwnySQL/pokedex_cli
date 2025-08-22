@@ -1,8 +1,8 @@
 package pokecache
 
 import (
-	"time"
 	"sync"
+	"time"
 )
 
 type cacheEntry struct {
