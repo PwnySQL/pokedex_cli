@@ -5,6 +5,12 @@ import (
 )
 
 func commandExplore(cfg *config) error {
-	fmt.Printf("You asked to explore: %s\n", *cfg.commandArgument)
+	pokemonResp, err := cfg.pokeapiClient.GetPokemonList(cfg.commandArgument)
+	if err != nil {
+		return err
+	}
+	for _, enc := range pokemonResp.PokemonEncounters {
+		fmt.Println(enc.Pokemon.Name)
+	}
 	return nil
 }
