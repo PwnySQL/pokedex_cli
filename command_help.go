@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 func commandHelp(cfg *config) error {
@@ -11,7 +12,19 @@ func commandHelp(cfg *config) error {
 	fmt.Println("Available commands:")
 	commandRegistry := getCommandRegistry()
 	for _, cliCmd := range commandRegistry {
-		fmt.Printf("%s: %s\n", cliCmd.name, cliCmd.description)
+		var b strings.Builder
+		for idx, arg := range cliCmd.arguments {
+			sep := " "
+			if idx == len(cliCmd.arguments)-1 {
+				sep = ""
+			}
+			fmt.Fprintf(&b, "<%s>%s", arg, sep)
+		}
+		sep := " "
+		if b.Len() <= 0 {
+			sep = ""
+		}
+		fmt.Printf("%s%s%s: %s\n", cliCmd.name, sep, b.String(), cliCmd.description)
 	}
 	return nil
 }

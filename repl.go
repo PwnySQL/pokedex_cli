@@ -13,12 +13,14 @@ type config struct {
 	pokeapiClient    pokeapi.Client
 	nextLocationsUrl *string
 	prevLocationsUrl *string
+	commandArgument  *string
 }
 
 type cliCommand struct {
 	name        string
 	description string
 	callback    func(*config) error
+	arguments   []string
 }
 
 func getCommandRegistry() map[string]cliCommand {
@@ -27,26 +29,31 @@ func getCommandRegistry() map[string]cliCommand {
 			name:        "exit",
 			description: "Exit the Program",
 			callback:    commandExit,
+			arguments:   []string{},
 		},
 		"help": {
 			name:        "help",
 			description: "Display the help message",
 			callback:    commandHelp,
+			arguments:   []string{},
 		},
 		"map": {
 			name:        "map",
 			description: "Show current locations and go to next area",
 			callback:    commandMap,
+			arguments:   []string{},
 		},
 		"mapb": {
 			name:        "mapb",
 			description: "Show current locations and go to previous area",
 			callback:    commandMapb,
+			arguments:   []string{},
 		},
 		"explore": {
 			name:        "explore",
-			description: "Show pokemons in the area",
+			description: "Show pokemons in the passed area",
 			callback:    commandExplore,
+			arguments:   []string{"area"},
 		},
 	}
 }
@@ -67,6 +74,10 @@ func replLoop(cfg *config) {
 		if !ok {
 			fmt.Printf("Unknown command: %s\n", words[0])
 			continue
+		}
+		cfg.commandArgument = nil
+		if len(words) > 1 {
+			cfg.commandArgument = &words[1]
 		}
 		err := cliCmd.callback(cfg)
 		if err != nil {
