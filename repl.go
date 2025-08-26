@@ -55,6 +55,12 @@ func getCommandRegistry() map[string]cliCommand {
 			callback:    commandExplore,
 			arguments:   []string{"area"},
 		},
+		"catch": {
+			name:        "catch",
+			description: "Catch the pokemon given by name",
+			callback:    commandCatch,
+			arguments:   []string{"name"},
+		},
 	}
 }
 
