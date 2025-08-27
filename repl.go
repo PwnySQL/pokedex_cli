@@ -5,23 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	"github.com/PwnySQL/pokedex_cli/internal/pokeapi"
 )
-
-type config struct {
-	pokeapiClient    pokeapi.Client
-	nextLocationsUrl *string
-	prevLocationsUrl *string
-	commandArgument  *string
-}
-
-type cliCommand struct {
-	name        string
-	description string
-	callback    func(*config) error
-	arguments   []string
-}
 
 func getCommandRegistry() map[string]cliCommand {
 	return map[string]cliCommand{
