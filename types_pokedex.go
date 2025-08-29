@@ -5,8 +5,18 @@ import (
 )
 
 type Pokemon struct {
-	name           string
-	baseExperience int
+	name   string
+	height int
+	weight int
+	stats  struct {
+		hp              int
+		attack          int
+		defense         int
+		special_attack  int
+		special_defense int
+		speed           int
+	}
+	types []string
 }
 
 type Pokedex map[string]Pokemon
