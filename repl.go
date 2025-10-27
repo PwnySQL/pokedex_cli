@@ -51,6 +51,12 @@ func getCommandRegistry() map[string]cliCommand {
 			callback:    commandInspect,
 			arguments:   []string{"name"},
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "Print names of all caught pokemons",
+			callback:    commandPokedex,
+			arguments:   []string{},
+		},
 	}
 }
 
